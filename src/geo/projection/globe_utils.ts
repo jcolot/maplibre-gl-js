@@ -135,15 +135,22 @@ export function lngLatBearingFromOrientation(q: quat): { lng: number; lat: numbe
  * quaternion (versor) rotation. Unlike the bearing-preserving {@link ITransform.setLocationAtPoint},
  * this stays smooth when dragging near and across the poles.
  *
- * The extracted `(lng, lat)` is the swing (center) target — independent of the twist about the
- * view axis — and `bearing` is that twist. So `fixedBearing` selects between:
- * - `false` (default): apply the full rotation, letting the bearing drift (the grabbed point
- *   tracks the cursor exactly).
- * - `true`: apply the swing only, keeping the bearing fixed. The center still moves smoothly
- *   across the poles, at the cost of the grabbed point slipping from the cursor near the poles.
+ * The `(lng, lat)` extracted from the orientation is the swing (center) target, independent of the
+ * twist about the view axis, and `bearing` is that twist, so `fixedBearing` selects whether the
+ * twist is applied.
  *
  * Note: automatically adjusts zoom to keep planet size consistent
  * (same size before and after a call), like `setLocationAtPoint` does.
+ * @param tr - The transform to rotate.
+ * @param lnglat - The location to bring under `point`.
+ * @param point - The screen point that `lnglat` should appear at.
+ * @param fixedBearing - When `true`, applies the swing only and keeps the bearing fixed; the center
+ * still moves smoothly across the poles, at the cost of the grabbed point slipping away from the
+ * cursor near them. When `false` (the default), applies the full rotation, so the grabbed point
+ * tracks the cursor exactly and the bearing drifts.
+ * @param panDelta - The drag's pixel delta. Near the poles the swing longitude is ill-conditioned,
+ * so it is derived instead from the tangential sweep of this delta around the pole. Omitting it
+ * skips that azimuthal handling.
  */
 export function versorSetLocationAtPoint(tr: ITransform, lnglat: LngLat, point: Point, fixedBearing = false, panDelta?: Point): void {
     // Pixels that miss the globe unproject to a fake location snapped to the

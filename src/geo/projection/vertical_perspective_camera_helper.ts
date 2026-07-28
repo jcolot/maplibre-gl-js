@@ -182,14 +182,20 @@ export class VerticalPerspectiveCameraHelper implements ICameraHelper {
         tr.setZoom(oldZoom + getZoomAdjustment(oldCenterLat, tr.center.lat));
     }
 
+    /**
+     * Pans the globe by rotating it with a single quaternion that brings the grabbed location back
+     * under the cursor, which stays smooth near and across the poles.
+     * @param deltas - The deltas accumulated for this frame.
+     * @param tr - The transform to pan.
+     * @param preZoomAroundLoc - The location that was under the cursor before this frame.
+     * @param fixedBearing - Whether to keep the bearing fixed, the default. When `false`, the
+     * bearing is free to drift so that the grabbed location tracks the cursor exactly.
+     */
     handleMapControlsPan(deltas: MapControlsDeltas, tr: ITransform, preZoomAroundLoc: LngLat, fixedBearing?: boolean): void {
         if (!deltas.panDelta) {
             return;
         }
 
-        // Unified quaternion (versor) panning: one code path that stays smooth near and across
-        // the poles. `fixedBearing` decides whether the bearing twist is applied — the default
-        // keeps the bearing fixed (swing only), `false` lets it drift with the drag.
         versorSetLocationAtPoint(tr, preZoomAroundLoc, deltas.around, fixedBearing !== false, deltas.panDelta);
     }
 
