@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Globe pan at the edge of the globe</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="./dist/maplibre-gl.css" />
+    <style>
+        body { margin: 0; font: 14px/1.5 -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; }
+        #map { position: absolute; inset: 0; }
+        #panel {
+            position: absolute; top: 12px; left: 12px; z-index: 1; max-width: 330px;
+            background: rgba(255,255,255,.95); padding: 12px 14px; border-radius: 5px;
+            box-shadow: 0 1px 4px rgba(0,0,0,.35);
+        }
+        #panel h1 { font-size: 14px; margin: 0 0 6px; }
+        #panel p { margin: 6px 0; font-size: 12.5px; color: #333; }
+        #panel ul { margin: 6px 0; padding-left: 18px; font-size: 12.5px; color: #333; }
+        #hud { margin-top: 8px; font: 12px/1.6 monospace; white-space: pre; border-top: 1px solid #ddd; padding-top: 6px; }
+        #hud .off { color: #b30000; font-weight: bold; }
+        #hud .on { color: #007000; }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<div id="panel">
+    <h1>Globe pan at the edge of the globe</h1>
+    <p>Drag the globe, especially <b>across the edge</b> and out into the empty space beyond it.</p>
+    <ul>
+        <li>Panning eases off as you approach the edge, and keeps going past it, instead of stopping.</li>
+        <li>The bearing stays put: north is still up after any drag.</li>
+        <li>Dragging over the pole stays smooth.</li>
+    </ul>
+    <div id="hud"></div>
+</div>
+<script type="module">
+    import * as maplibregl from './dist/maplibre-gl.mjs';
+
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: 'https://demotiles.maplibre.org/style.json',
+        zoom: 2,
+        center: [0, 25],
+    });
+    map.on('style.load', () => map.setProjection({type: 'globe'}));
+
+    let onGlobe = null;
+    map.getCanvas().addEventListener('mousemove', (ev) => {
+        const r = map.getCanvas().getBoundingClientRect();
+        onGlobe = map._camera.transform.isPointOnMapSurface({x: ev.clientX - r.left, y: ev.clientY - r.top});
+        render();
+    });
+
+    const hud = document.getElementById('hud');
+    function render() {
+        const c = map.getCenter();
+        const where = onGlobe === null ? '' :
+            (onGlobe ? '<span class="on">cursor ON globe</span>' : '<span class="off">cursor OFF globe</span>');
+        hud.innerHTML = `lat ${c.lat.toFixed(2)}   lng ${c.lng.toFixed(2)}\nbearing ${map.getBearing().toFixed(2)}\n${where}`;
+    }
+    map.on('move', render);
+    map.on('load', render);
+</script>
+</body>
+</html>
